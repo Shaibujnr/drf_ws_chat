@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import MessageBubble from "./Message";
-import { useMessages, useSendMessage } from "../hooks";
+import { useMessageReceived, useMessages, useSendMessage } from "../hooks";
 
-const Chat = ({ userUUID, withUserUUID, token }) => {
+const Chat = ({ userUUID, withUserUUID, token, onDisconnect }) => {
   const userMessages = useMessages(userUUID, token);
   const sendMessage = useSendMessage();
-  const [messages, setMessages] = useState([]);
+  const { mutate: sendMessageReceived } = useMessageReceived();
+  const [messages, setMessages] = useState({});
   const [newMessage, setNewMessage] = useState("");
 
   const messagesContainerRef = useRef(null);
@@ -24,7 +25,11 @@ const Chat = ({ userUUID, withUserUUID, token }) => {
         { token, userUUID: withUserUUID, message: pendingMessage.message },
         {
           onSuccess: (data) => {
-            setMessages([...messages, data]);
+            setMessages((prevstate) => {
+              const newState = { ...prevstate };
+              newState[data.uuid] = data;
+              return newState;
+            });
           },
         }
       );
@@ -40,9 +45,57 @@ const Chat = ({ userUUID, withUserUUID, token }) => {
 
   useEffect(() => {
     if (userMessages.isSuccess) {
-      setMessages(userMessages.data);
+      const newState = {};
+      for (let message of userMessages.data) {
+        newState[message.uuid] = message;
+      }
+      setMessages(newState);
     }
   }, [userMessages.isSuccess, userMessages.data]);
+
+  useEffect(() => {
+    const socket = new WebSocket(`ws://localhost:5080/ws/chat/?token=${token}`);
+    // Connection opened
+    socket.addEventListener("open", (event) => {
+      console.log("websocket connected");
+    });
+
+    // Listen for messages
+    socket.addEventListener("message", (event) => {
+      const payload = JSON.parse(event.data);
+      console.log("Websocket payload received", { payload });
+      if (payload.event_type === "new_message") {
+        if (!(payload.data.uuid in messages)) {
+          setMessages((prevMessages) => {
+            const newMessages = { ...prevMessages };
+            newMessages[payload.data.uuid] = {
+              ...payload.data,
+              created_on: new Date(),
+            };
+            return newMessages;
+          });
+        }
+        sendMessageReceived({ token, messageUUID: payload.data.uuid });
+      }
+      if (payload.event_type === "delivered") {
+        if (payload.data.uuid in messages) {
+          setMessages((prevMessages) => {
+            const newMessages = { ...prevMessages };
+            newMessages[payload.data.uuid] = {
+              ...prevMessages[payload.data.uuid],
+              is_delivered: true,
+            };
+            return newMessages;
+          });
+        }
+      }
+    });
+
+    socket.addEventListener("close", (event) => {
+      console.log("Conneciton closing", { event });
+      onDisconnect();
+    });
+  }, [token, messages, sendMessageReceived, onDisconnect]);
 
   return (
     <div
@@ -53,7 +106,8 @@ const Chat = ({ userUUID, withUserUUID, token }) => {
         className="flex-grow p-2 border-b border-gray-300 overflow-y-auto"
         ref={messagesContainerRef}
       >
-        {messages.map((message, index) => (
+        {}
+        {Object.values(messages).map((message, index) => (
           <MessageBubble
             key={index}
             text={message.message}

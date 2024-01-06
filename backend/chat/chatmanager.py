@@ -30,10 +30,10 @@ class ChatManager:
         await connection.send(text_data=json.dumps({
             "event_type": NEW_MESSAGE_EVENT_TYPE,
             "data": {
-                'uuid': str(message_uuid),
-                'from_name': sender_name,
-                'from_uuid': str(sender_uuid),
-                'message': message
+                "uuid": str(message_uuid),
+                "from_uuid": str(sender_uuid),
+                "to_uuid": str(receiver_uuid),
+                "message": message
             }
         }))
 

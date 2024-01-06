@@ -12,7 +12,7 @@ from jose.exceptions import JWTError
 from backend.settings import SECRET_KEY
 from .models import Message
 from .chatmanager import ChatManager
-
+from datetime import datetime
 class AuthApiView(APIView):
     def post(self, request, format=None):
         data = request.data
@@ -28,8 +28,8 @@ class AuthApiView(APIView):
             return Response({"message": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({"token": jwt.encode({"sub": str(user_uuid)}, SECRET_KEY)}, status=status.HTTP_200_OK)
 
-class MessagesAPIView(APIView):
-    def authenticate_request(self, request) -> UUID:
+
+def authenticate_request(request) -> UUID:
         authorization = request.headers.get("authorization")
         if authorization is None:
             return None
@@ -48,8 +48,9 @@ class MessagesAPIView(APIView):
         except KeyError:
             return None
 
+class MessagesAPIView(APIView):
     def get(self, request, format=None):
-        user_uuid = self.authenticate_request(request)
+        user_uuid = authenticate_request(request)
         if user_uuid is None:
             return Response({"message": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         messages = Message.objects.filter(Q(from_uuid=user_uuid) | Q(to_uuid=user_uuid)).all().order_by('created_on')
@@ -64,7 +65,7 @@ class MessagesAPIView(APIView):
         } for msg in messages], status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
-        user_uuid = self.authenticate_request(request)
+        user_uuid = authenticate_request(request)
         if user_uuid is None:
             return Response({"message": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         payload = request.data
@@ -96,3 +97,29 @@ class MessagesAPIView(APIView):
             "is_seen": msg.seen_on is not None,
             "message": msg.message
         }, status=status.HTTP_201_CREATED)
+
+class MessageReceviedAPIView(APIView):
+    def post(self, request, format=None):
+        user_uuid = authenticate_request(request)
+        if user_uuid is None:
+            return Response({"message": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        payload = request.data
+        if "message_uuid" not in payload:
+            return Response({"message": "'message_uuid' is required"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        chat_manager : ChatManager = request._request.scope['chat_manager']
+        try:
+            message_uuid = UUID(payload['message_uuid'])
+            message = Message.objects.get(uuid=message_uuid)
+            if message is not None:
+                if message.to_uuid != user_uuid:
+                    return Response({"message": "not allowed"}, status=status.HTTP_403_FORBIDDEN)
+                message.delivered_on = datetime.utcnow()
+                message.save()
+            loop = request._request.scope["loop"]
+            loop.create_task(chat_manager.notify_sender_delivered(message.from_uuid, message.uuid))
+            return Response({
+            "message": "successful"
+        }, status=status.HTTP_201_CREATED)
+        except ValueError:
+            return Response({"message": "invalid 'to_uuid'"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        

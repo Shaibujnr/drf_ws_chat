@@ -36,13 +36,14 @@ const MessageBubble = ({
         style={{ maxWidth: "calc(70% - 1rem)" }} // Adjust the value as needed
       >
         <p className="mb-1 break-all">{text}</p>
-        <div
-          className={
-            isSender ? "text-xs text-gray-100" : "text-xs text-gray-500"
-          }
-        >
-          {formatDate(timestamp)} | {getStatusText()}
-        </div>
+        {isSender && (
+          <div className="text-xs text-gray-100">
+            {formatDate(timestamp)} | {getStatusText()}
+          </div>
+        )}
+        {!isSender && (
+          <div className="text-xs text-gray-500">{formatDate(timestamp)}</div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,10 @@
 import { useMutation, useQuery } from "react-query";
-import { authenticateUser, fetchMessages, sendMessage } from "./service";
+import {
+  authenticateUser,
+  fetchMessages,
+  messageReceived,
+  sendMessage,
+} from "./service";
 
 export const useAuthenticate = () => {
   return useMutation((userUUID) => authenticateUser(userUUID));
@@ -19,5 +24,11 @@ export const useMessages = (userUUID, token) => {
 export const useSendMessage = () => {
   return useMutation(({ token, userUUID, message }) =>
     sendMessage(token, userUUID, message)
+  );
+};
+
+export const useMessageReceived = () => {
+  return useMutation(({ token, messageUUID }) =>
+    messageReceived(token, messageUUID)
   );
 };

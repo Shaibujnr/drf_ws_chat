@@ -15,11 +15,21 @@ const User = ({ userUUID, withUserUUID }) => {
 
   if (token != null) {
     return (
-      <Chat token={token} userUUID={userUUID} withUserUUID={withUserUUID} />
+      <Chat
+        token={token}
+        userUUID={userUUID}
+        withUserUUID={withUserUUID}
+        onDisconnect={() => setToken(null)}
+      />
     );
   } else {
     return (
-      <Connect userUUID={userUUID} onSuccess={onSuccess} onError={onError} />
+      <Connect
+        userUUID={userUUID}
+        onSuccess={onSuccess}
+        onError={onError}
+        onDisconnect={() => setToken(null)}
+      />
     );
   }
 };
