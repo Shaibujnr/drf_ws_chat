@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import MessageBubble from "./Message";
+import { useMessages, useSendMessage } from "../hooks";
 
-const Chat = () => {
+const Chat = ({ userUUID, withUserUUID, token }) => {
+  const userMessages = useMessages(userUUID, token);
+  const sendMessage = useSendMessage();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
@@ -9,15 +12,22 @@ const Chat = () => {
 
   const handleSendMessage = () => {
     if (newMessage.trim() !== "") {
-      setMessages([
-        ...messages,
+      let pendingMessage = {
+        message: newMessage,
+        uuid: null,
+        from_uuid: userUUID,
+        is_seen: false,
+        is_delivered: false,
+        created_on: new Date(),
+      };
+      sendMessage.mutate(
+        { token, userUUID: withUserUUID, message: pendingMessage.message },
         {
-          text: newMessage,
-          sender: "user",
-          status: "sent",
-          timestamp: "13:00",
-        },
-      ]);
+          onSuccess: (data) => {
+            setMessages([...messages, data]);
+          },
+        }
+      );
       setNewMessage("");
     }
   };
@@ -27,6 +37,12 @@ const Chat = () => {
     messagesContainerRef.current.scrollTop =
       messagesContainerRef.current.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    if (userMessages.isSuccess) {
+      setMessages(userMessages.data);
+    }
+  }, [userMessages.isSuccess, userMessages.data]);
 
   return (
     <div
@@ -40,11 +56,12 @@ const Chat = () => {
         {messages.map((message, index) => (
           <MessageBubble
             key={index}
-            text={message.text}
-            sender={index < 5 ? "user" : "notuser"}
-            timestamp={message.timestamp}
-            status={message.status}
-            position={index < 5 ? "left" : "right"}
+            text={message.message}
+            uuid={message.uuid}
+            isSender={message.from_uuid === userUUID}
+            isSeen={message.is_seen}
+            isDelivered={message.is_delivered}
+            timestamp={message.created_on}
           />
         ))}
       </div>
