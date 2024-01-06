@@ -19,10 +19,8 @@ class ChatManager:
             return
         self.connections[user_uuid] = websocket
 
-    def remove_user_connection(self, websocket: AsyncWebsocketConsumer):
-        for key, val in self.connections.items():
-            if val == websocket:
-                del self.connections[key]
+    def remove_user_connection(self, user_uuid: UUID):
+        del self.connections[user_uuid]
 
     async def send_message_to_receiver(self, receiver_uuid: UUID, sender_uuid: UUID, message_uuid:UUID, message: str):
         connection = self.connections.get(receiver_uuid)

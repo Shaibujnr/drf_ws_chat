@@ -30,7 +30,6 @@ class AuthApiView(APIView):
 
 class MessagesAPIView(APIView):
     def authenticate_request(self, request) -> UUID:
-        print(request.headers)
         authorization = request.headers.get("authorization")
         if authorization is None:
             return None

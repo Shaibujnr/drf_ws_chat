@@ -27,5 +27,5 @@ application = ChatManagerMiddleware(application, chat_manager)
 
 application = ProtocolTypeRouter({
     "http": application,
-    "websocket": URLRouter(websocket_urlpatterns),
+    "websocket": ChatManagerMiddleware(URLRouter(websocket_urlpatterns), chat_manager),
 })
