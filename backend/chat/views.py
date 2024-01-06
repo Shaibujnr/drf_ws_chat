@@ -59,8 +59,9 @@ class MessagesAPIView(APIView):
             "to_uuid": str(msg.to_uuid),
             "created_on": msg.created_on,
             "is_delivered": msg.delivered_on is not None,
-            "is_seen": msg.seen_on is not None
-        } for msg in messages], status=status.HTTP_401_UNAUTHORIZED)
+            "is_seen": msg.seen_on is not None,
+            "message": msg.message
+        } for msg in messages], status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
         user_uuid = self.authenticate_request(request)
@@ -92,5 +93,6 @@ class MessagesAPIView(APIView):
             "to_uuid": str(msg.to_uuid),
             "created_on": msg.created_on,
             "is_delivered": msg.delivered_on is not None,
-            "is_seen": msg.seen_on is not None
+            "is_seen": msg.seen_on is not None,
+            "message": msg.message
         }, status=status.HTTP_201_CREATED)

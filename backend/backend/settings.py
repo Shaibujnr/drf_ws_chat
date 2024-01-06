@@ -37,9 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "corsheaders",
     "chat",
     "channels",
-    "rest_framework"
+    "rest_framework",
+
 ]
 
 MIDDLEWARE = [
@@ -50,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -126,3 +129,20 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static', )
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow specific headers
+CORS_ALLOWED_HEADERS = ['Content-Type', 'Authorization']
+
+# Allow specific methods
+CORS_ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+
+# Allow credentials (cookies, HTTP authentication)
+CORS_ALLOW_CREDENTIALS = True
+
+# Configure exposed headers
+CORS_EXPOSED_HEADERS = []
+
+# Configure max age for CORS preflight requests
+CORS_PREFLIGHT_MAX_AGE = 86400
