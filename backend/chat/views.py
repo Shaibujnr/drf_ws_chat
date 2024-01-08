@@ -13,6 +13,7 @@ from backend.settings import SECRET_KEY
 from .models import Message
 from .chatmanager import ChatManager
 from datetime import datetime
+
 class AuthApiView(APIView):
     def post(self, request, format=None):
         data = request.data
@@ -88,6 +89,8 @@ class MessagesAPIView(APIView):
             message=payload['message'],
         )
         msg.save()
+        loop = request._request.scope["loop"]
+        loop.create_task(chat_manager.send_message_to_receiver(msg.to_uuid, msg.from_uuid, msg.uuid, msg.message))
         return Response({
             "uuid": str(msg.uuid),
             "from_uuid": str(msg.from_uuid),

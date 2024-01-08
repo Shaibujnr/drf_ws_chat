@@ -9,7 +9,10 @@ from backend.settings import SECRET_KEY
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        # TODO authenticate before accepting
+        """
+        Authenticate the connection using the token and on succesful authentication,
+        add the users connection to the chat manager.
+        """
         parsed_query_string = parse_qs(self.scope["query_string"])
         token = parsed_query_string.get(b"token")
         if token is None:

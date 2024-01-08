@@ -1,6 +1,9 @@
 from .chatmanager import ChatManager
 
 class ChatManagerMiddleware:
+    """
+    ASGI middleware to store chat_manager and asyncio event loop in request scope
+    """
     def __init__(self, app, chat_manager: ChatManager, loop):
         self.app = app
         self.chat_manager = chat_manager

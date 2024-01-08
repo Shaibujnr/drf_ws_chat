@@ -25,10 +25,16 @@ django.setup()
 
 from chat.dispatcher import dispatch
 
+# Get the asyncio event loop, this should be provided by our asgi server, uvicorn in this case
 loop = asyncio.get_event_loop()
+
+# instantiate the chat manager so we have only one instance that is shared across all requests
 chat_manager = ChatManager()
+
+# create the dispatcher task using the asyncio loop.
 loop.create_task(dispatch(loop, chat_manager))
 application = get_asgi_application()
+
 application = ChatManagerMiddleware(application, chat_manager, loop)
 
 application = ProtocolTypeRouter({

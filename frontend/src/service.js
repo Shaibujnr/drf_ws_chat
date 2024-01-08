@@ -1,15 +1,18 @@
 import axios from "axios";
 
 export const authenticateUser = async (userUUID) => {
-  const result = await axios.post("http://localhost:5080/auth/", {
-    user_uuid: userUUID,
-  });
+  const result = await axios.post(
+    `${process.env.REACT_APP_API_HOST}:${process.env.REACT_APP_API_PORT}/auth/`,
+    {
+      user_uuid: userUUID,
+    }
+  );
   return result.data.token;
 };
 
 export const sendMessage = async (token, userUUID, message) => {
   const result = await axios.post(
-    "http://localhost:5080/messages/",
+    `${process.env.REACT_APP_API_HOST}:${process.env.REACT_APP_API_PORT}/messages/`,
     {
       message: message,
       to_uuid: userUUID,
@@ -21,7 +24,7 @@ export const sendMessage = async (token, userUUID, message) => {
 
 export const messageReceived = async (token, messageUUID) => {
   const result = await axios.post(
-    "http://localhost:5080/received/",
+    `${process.env.REACT_APP_API_HOST}:${process.env.REACT_APP_API_PORT}/received/`,
     {
       message_uuid: messageUUID,
     },
@@ -32,7 +35,7 @@ export const messageReceived = async (token, messageUUID) => {
 
 export const seeMessage = async (token, messageUUID) => {
   const result = await axios.post(
-    "http://localhost:5080/seen/",
+    `${process.env.REACT_APP_API_HOST}:${process.env.REACT_APP_API_PORT}/seen/`,
     {
       message_uuid: messageUUID,
     },
@@ -42,8 +45,11 @@ export const seeMessage = async (token, messageUUID) => {
 };
 
 export const fetchMessages = async (token) => {
-  const result = await axios.get("http://localhost:5080/messages/", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const result = await axios.get(
+    `${process.env.REACT_APP_API_HOST}:${process.env.REACT_APP_API_PORT}/messages/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return result.data;
 };

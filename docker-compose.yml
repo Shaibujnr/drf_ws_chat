@@ -8,9 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: drf_ws_chat_api
     ports:
-      - "5080:8000"
-    env_file:
-      - backend/.env
+      - "3001:8000"
     volumes:
       - ./backend:/code
     command:
@@ -22,5 +20,20 @@ services:
         "--port",
         "8000",
         "--reload"
+      ]
+  drf_ws_chat_web:
+    image: drf_ws_chat_web:dev
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: drf_ws_chat_web
+    ports:
+      - "3000:3000"
+    env_file:
+      - frontend/.env
+    command:
+      [
+        "npm",
+        "start"
       ]
   

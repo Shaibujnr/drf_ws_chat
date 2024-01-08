@@ -21,8 +21,6 @@ from chat.views import MessagesAPIView, AuthApiView, MessageReceviedAPIView, Mes
 from .settings import STATIC_URL, STATIC_ROOT
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-    # TODO use one for both / and no /
     path('messages/', MessagesAPIView.as_view()),
     path('received/', MessageReceviedAPIView.as_view()),
     path('seen/', MessageSeenAPIView.as_view()),
