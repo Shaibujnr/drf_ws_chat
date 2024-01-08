@@ -8,7 +8,7 @@ down:
 	docker compose down
 
 build:
-	docker compose build --no-cache
+	docker compose build
 
 api_bash:
 	docker compose run drf_ws_chat_api bash
