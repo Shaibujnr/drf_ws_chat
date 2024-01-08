@@ -8,6 +8,7 @@ const Chat = ({ userUUID, withUserUUID, token, onDisconnect }) => {
   const { mutate: sendMessageReceived } = useMessageReceived();
   const [messages, setMessages] = useState({});
   const [newMessage, setNewMessage] = useState("");
+  const [bottomVisibleMessage, setBottomVisibleMessage] = useState(null);
 
   const messagesContainerRef = useRef(null);
 
@@ -34,13 +35,47 @@ const Chat = ({ userUUID, withUserUUID, token, onDisconnect }) => {
         }
       );
       setNewMessage("");
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop =
+          messagesContainerRef.current.scrollHeight;
+      }
     }
   };
 
+  // useEffect(() => {
+  //   // Scroll to the bottom when messages are updated
+  //   messagesContainerRef.current.scrollTop =
+  //     messagesContainerRef.current.scrollHeight;
+  // }, [messages]);
+
   useEffect(() => {
-    // Scroll to the bottom when messages are updated
-    messagesContainerRef.current.scrollTop =
-      messagesContainerRef.current.scrollHeight;
+    console.log("Bottom visible message is", { bottomVisibleMessage });
+  }, [bottomVisibleMessage]);
+
+  useEffect(() => {
+    const chatContainer = messagesContainerRef.current;
+    const handleScroll = () => {
+      console.log("scrolling");
+      console.log(chatContainer.scrollTop);
+      console.log(chatContainer.scrollBottom);
+      console.log(chatContainer.scrollHeight);
+      const { scrollTop, clientHeight } = chatContainer;
+      const bottomVisibleIndex =
+        Math.floor((scrollTop + clientHeight) / clientHeight) - 1;
+
+      if (bottomVisibleIndex >= 0 && bottomVisibleIndex < messages.length) {
+        setBottomVisibleMessage(messages[bottomVisibleIndex]);
+      }
+    };
+    if (chatContainer) {
+      chatContainer.addEventListener("scrollend", handleScroll);
+    }
+    handleScroll();
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener("scrollend", handleScroll);
+      }
+    };
   }, [messages]);
 
   useEffect(() => {
@@ -89,6 +124,18 @@ const Chat = ({ userUUID, withUserUUID, token, onDisconnect }) => {
           });
         }
       }
+      if (payload.event_type === "seen") {
+        if (payload.data.uuid in messages) {
+          setMessages((prevMessages) => {
+            const newMessages = { ...prevMessages };
+            newMessages[payload.data.uuid] = {
+              ...prevMessages[payload.data.uuid],
+              is_seen: true,
+            };
+            return newMessages;
+          });
+        }
+      }
     });
 
     socket.addEventListener("close", (event) => {
@@ -110,6 +157,7 @@ const Chat = ({ userUUID, withUserUUID, token, onDisconnect }) => {
         {Object.values(messages).map((message, index) => (
           <MessageBubble
             key={index}
+            token={token}
             text={message.message}
             uuid={message.uuid}
             isSender={message.from_uuid === userUUID}

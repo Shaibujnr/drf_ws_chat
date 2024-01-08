@@ -20,13 +20,13 @@ class ChatManager:
         self.connections[user_uuid] = websocket
 
     def remove_user_connection(self, user_uuid: UUID):
-        del self.connections[user_uuid]
+        if user_uuid in self.connections:
+            del self.connections[user_uuid]
 
     async def send_message_to_receiver(self, receiver_uuid: UUID, sender_uuid: UUID, message_uuid:UUID, message: str):
         connection = self.connections.get(receiver_uuid)
         if connection is None:
             return
-        sender_name = self.users.get(sender_uuid)
         await connection.send(text_data=json.dumps({
             "event_type": NEW_MESSAGE_EVENT_TYPE,
             "data": {

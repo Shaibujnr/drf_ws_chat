@@ -17,16 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.conf.urls.static import static
 from django.urls import path, include
-from chat.views import MessagesAPIView, AuthApiView, MessageReceviedAPIView
+from chat.views import MessagesAPIView, AuthApiView, MessageReceviedAPIView, MessageSeenAPIView
 from .settings import STATIC_URL, STATIC_ROOT
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
     # TODO use one for both / and no /
     path('messages/', MessagesAPIView.as_view()),
-    path('messages', MessagesAPIView.as_view()),
     path('received/', MessageReceviedAPIView.as_view()),
-    path('received', MessageReceviedAPIView.as_view()),
+    path('seen/', MessageSeenAPIView.as_view()),
     path('auth/', AuthApiView.as_view()),
-    path('auth', AuthApiView.as_view()),
 ] + static(STATIC_URL, document_root=STATIC_ROOT)

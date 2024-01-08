@@ -3,6 +3,7 @@ import {
   authenticateUser,
   fetchMessages,
   messageReceived,
+  seeMessage,
   sendMessage,
 } from "./service";
 
@@ -30,5 +31,11 @@ export const useSendMessage = () => {
 export const useMessageReceived = () => {
   return useMutation(({ token, messageUUID }) =>
     messageReceived(token, messageUUID)
+  );
+};
+
+export const useSeeMessage = () => {
+  return useMutation(({ token, messageUUID }) =>
+    seeMessage(token, messageUUID)
   );
 };

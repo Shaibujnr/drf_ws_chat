@@ -30,6 +30,17 @@ export const messageReceived = async (token, messageUUID) => {
   return result.data;
 };
 
+export const seeMessage = async (token, messageUUID) => {
+  const result = await axios.post(
+    "http://localhost:5080/seen/",
+    {
+      message_uuid: messageUUID,
+    },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return result.data;
+};
+
 export const fetchMessages = async (token) => {
   const result = await axios.get("http://localhost:5080/messages/", {
     headers: { Authorization: `Bearer ${token}` },

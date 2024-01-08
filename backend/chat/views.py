@@ -1,4 +1,4 @@
-import asyncio
+import pytz
 from django.db.models import Q
 from uuid import UUID
 from asgiref.sync import async_to_sync
@@ -113,10 +113,37 @@ class MessageReceviedAPIView(APIView):
             if message is not None:
                 if message.to_uuid != user_uuid:
                     return Response({"message": "not allowed"}, status=status.HTTP_403_FORBIDDEN)
-                message.delivered_on = datetime.utcnow()
+                message.delivered_on = datetime.utcnow().astimezone(tz=pytz.utc)
                 message.save()
             loop = request._request.scope["loop"]
             loop.create_task(chat_manager.notify_sender_delivered(message.from_uuid, message.uuid))
+            return Response({
+            "message": "successful"
+        }, status=status.HTTP_201_CREATED)
+        except ValueError:
+            return Response({"message": "invalid 'to_uuid'"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        
+
+class MessageSeenAPIView(APIView):
+    def post(self, request, format=None):
+        user_uuid = authenticate_request(request)
+        if user_uuid is None:
+            return Response({"message": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        payload = request.data
+        if "message_uuid" not in payload:
+            return Response({"message": "'message_uuid' is required"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        chat_manager : ChatManager = request._request.scope['chat_manager']
+        try:
+            message_uuid = UUID(payload['message_uuid'])
+            message = Message.objects.get(uuid=message_uuid)
+            if message is not None:
+                if message.to_uuid != user_uuid:
+                    return Response({"message": "not allowed"}, status=status.HTTP_403_FORBIDDEN)
+                seen_time = datetime.utcnow().astimezone(tz=pytz.utc)
+                message.seen_on = seen_time
+                message.save()
+            loop = request._request.scope["loop"]
+            loop.create_task(chat_manager.notify_sender_seen(message.from_uuid, message.uuid))
             return Response({
             "message": "successful"
         }, status=status.HTTP_201_CREATED)
